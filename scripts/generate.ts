@@ -25,7 +25,6 @@ const parser = new chorpiler.Parser();
 const iNet = await parser.fromXML(xml);
 
 const contractGenerator = new chorpiler.generators.sol.DefaultContractGenerator();
-const gen = await contractGenerator.compile(iNet);
 
 //output directory
 const outDir = path.resolve(__dirname, "output");
@@ -40,12 +39,13 @@ const outJson = path.join(outDir, `${base}_encoding.json`);
 // compile to smart contract
 contractGenerator.compile(iNet).then((gen) => {
 fs.writeFileSync(outSol, gen.target, { flag: 'w+' });
+
 fs.writeFileSync(outJson, JSON.stringify(ProcessEncoding.toJSON(gen.encoding), null, 2), { flag: "w+" });
 
 console.log(`Wrote ${outSol}`);
 console.log(`Wrote ${outJson}`);
 
-  console.log("Process.sol generated.");
+  console.log(outSol + " as Solidity smart contract generated.");
   // log encoding of participants and tasks, 
   // can also be written to a .json file
   console.log(ProcessEncoding.toJSON(gen.encoding));

@@ -91,3 +91,12 @@ of Business Processes on Blockchain. In: BPM. Springer, Cham (2017) 130–146
 
 [2]: Decker, G., Weske, M.: Local enforceability in interaction Petri nets. In: BPM.
 Volume 4714 of LNCS., Springer, Cham (2007) 305–319
+
+
+Changes to Chorpiler by Rami Ezzeddine to enable Token Transfers without Messages
+
+Objective: Enable chorpiler to generate Escrow settlement that runs besides the regular smart contract that enforces the process
+
+Changes: 
+//add EscrowSettlement Contract
+src/Generator/templates/EscrowSettlement.sol

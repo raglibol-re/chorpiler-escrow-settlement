@@ -2,55 +2,67 @@
 //run npm install chorpiler
 
 
+// ...existing code...
 import * as fs from 'fs';
-import chorpiler, { ProcessEncoding } from 'chorpiler';
-import * as path from 'path';
+import path from 'path';
+import { INetFastXMLParser } from '../src/Parser/FastXMLParser';
+import SolDefaultContractGenerator from '../src/Generator/target/Sol/DefaultGenerator';
 
-//test
-import INetFastXMLParser from 'chorpiler';
-import SolDefaultContractGenerator from 'chorpiler';
 
 (async () => {
   const bpmnPath = process.argv[2];
   if (!bpmnPath) {
-    console.error('Usage: npx ts-node scripts/generate.ts scripts\TestCase_PizzaDelivery.bpmn');
+    console.error('Usage: npx ts-node scripts/generatewithescrow.ts <file.bpmn>');
     process.exit(1);
   }
 
-try {
-//RE: Extra step to read file, because of compiler issue
-const xml = fs.readFileSync(path.resolve(bpmnPath));
-const parser = new chorpiler.Parser();
-// parse BPMN file into petri net
-const iNet = await parser.fromXML(xml);
+  const resolvedPath = path.isAbsolute(bpmnPath) ? bpmnPath : path.resolve(process.cwd(), bpmnPath);
+  if (!fs.existsSync(resolvedPath)) {
+    console.error('File not found:', resolvedPath);
+    process.exit(1);
+  }
 
-const contractGenerator = new chorpiler.generators.sol.DefaultContractGenerator();
-const gen = await contractGenerator.compile(iNet);
+  try {
+    const xml = fs.readFileSync(resolvedPath);
+    const parser = new INetFastXMLParser();
+    const iNetArray = await parser.fromXML(xml);
+    console.log('Parsed nets:', Array.isArray(iNetArray) ? iNetArray.length : 'single');
 
-//output directory
-const outDir = path.resolve(__dirname, "output");
-fs.mkdirSync(outDir, { recursive: true });
+    const iNet = Array.isArray(iNetArray) ? iNetArray[0] : iNetArray;
+    const generator = new SolDefaultContractGenerator(iNet);
 
-const base = path.basename(bpmnPath, path.extname(bpmnPath));
-const outSol = path.join(outDir, `${base}.sol`);
-const outJson = path.join(outDir, `${base}_encoding.json`);
+    const result = await generator.compile();
+    if (!result || !result.target) {
+      console.error('Generation failed: generator returned no result.');
+      process.exit(1);
+    }
 
+    const outDir = path.resolve(__dirname, 'output');
+    fs.mkdirSync(outDir, { recursive: true });
 
+    const base = path.basename(resolvedPath, path.extname(resolvedPath));
+    const outSol = path.join(outDir, `${base}.sol`);
+    const outJson = path.join(outDir, `${base}_encoding.json`);
 
-// compile to smart contract
-contractGenerator.compile(iNet).then((gen) => {
-fs.writeFileSync(outSol, gen.target, { flag: 'w+' });
-fs.writeFileSync(outJson, JSON.stringify(ProcessEncoding.toJSON(gen.encoding), null, 2), { flag: "w+" });
+    fs.writeFileSync(outSol, result.target, { flag: 'w+' });
+    console.log(`Wrote ${outSol}`);
 
-console.log(`Wrote ${outSol}`);
-console.log(`Wrote ${outJson}`);
+    if (result.encoding) {
+      // write raw encoding (or transform with proper helper if available)
+      fs.writeFileSync(outJson, JSON.stringify(result.encoding, null, 2), { flag: 'w+' });
+      console.log(`Wrote ${outJson}`);
+    } else {
+      console.log('No encoding returned; skipping JSON output.');
+    }
 
-  console.log("Process.sol generated.");
-  // log encoding of participants and tasks, 
-  // can also be written to a .json file
-  console.log(ProcessEncoding.toJSON(gen.encoding));
-})
-   } catch (err) {
+    if (result.extras?.escrow) {
+      const outEscrow = path.join(outDir, `${base}.escrow.sol`);
+      fs.writeFileSync(outEscrow, result.extras.escrow, { flag: 'w+' });
+      console.log(`Wrote ${outEscrow}`);
+    } else {
+      console.log('No escrow template rendered (no extras.escrow).');
+    }
+  } catch (err) {
     console.error('Generation failed:', err);
     process.exit(1);
   }

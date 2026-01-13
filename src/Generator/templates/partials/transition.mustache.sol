@@ -2,9 +2,36 @@
 {{#hasConditions}}
 if ({{#conditions}}{{> condition}}{{/conditions}}) {
 {{/hasConditions}}
+
 {{#taskName}}
 // <--- custom code for task here --->
+_tokenState &= ~uint({{{consume}}});
 {{/taskName}}
+
+
+{{#settlement}}
+
+{{#lock}}
+escrow.lock(
+    {{{key}}},
+    {{{token}}}, 
+    {{{payer}}}, 
+    {{{payee}}},
+    {{{amount}}}
+);
+{{/lock}}
+
+{{#release}}
+escrow.release({{{key}}});
+{{/release}}
+
+{{#refund}}
+escrow.refund({{{key}}});
+{{/refund}}
+
+{{/settlement}}
+
+
 _tokenState &= ~uint({{{consume}}});
 {{#outTo}}
 tokenState[{{outTo.id}}] = {{outTo.produce}};
@@ -23,6 +50,7 @@ id = 0;
 {{/initiator}}
 continue; 
 {{/isEnd}}
+
 {{#hasConditions}}
 }
 {{/hasConditions}}

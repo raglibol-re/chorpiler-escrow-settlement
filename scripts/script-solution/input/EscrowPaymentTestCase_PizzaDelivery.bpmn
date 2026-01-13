@@ -87,12 +87,14 @@
       <bpmn2:participantRef>Participant_0537iz2</bpmn2:participantRef>
       <bpmn2:messageFlowRef>MessageFlow_1yc61o3</bpmn2:messageFlowRef>
     </bpmn2:choreographyTask>
-    <bpmn2:exclusiveGateway id="Gateway_0bkmdu1">
-      <bpmn2:incoming>Flow_01ovlrg</bpmn2:incoming>
-      <bpmn2:outgoing>Flow_1hbdxyx</bpmn2:outgoing>
-      <bpmn2:outgoing>Flow_1dtk6pt</bpmn2:outgoing>
+
+    <bpmn2:exclusiveGateway id="Gateway_0bkmdu1" default="Flow_1hbdxyx">
+      <bpmn2:incoming>Flow_01ovlrg</bpmn2:incoming> 
+      <bpmn2:outgoing>Flow_1hbdxyx</bpmn2:outgoing> <!-- conditional -->
+      <bpmn2:outgoing>Flow_1dtk6pt</bpmn2:outgoing> <!-- default -->
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="Flow_01ovlrg" sourceRef="ChoreographyTask_175oxwe" targetRef="Gateway_0bkmdu1" />
+
+    <bpmn2:sequenceFlow id="Flow_01ovlrg" sourceRef="ChoreographyTask_175oxwe" targetRef="Gateway_0bkmdu1"/>
     <!-- RE: add settlement RELEASE -->
     <bpmn2:choreographyTask id="ChoreographyTask_1ngfwxe" name="Confirm delivery and release payment" initiatingParticipantRef="Participant_06qakjv">
       <bpmn2:extensionElements>
@@ -113,7 +115,15 @@
       <bpmn2:messageFlowRef>MessageFlow_1i63sxg</bpmn2:messageFlowRef>
     </bpmn2:choreographyTask>
     <bpmn2:sequenceFlow id="Flow_1hbdxyx" sourceRef="Gateway_0bkmdu1" targetRef="ChoreographyTask_1ngfwxe" />
-    <bpmn2:sequenceFlow id="Flow_1dtk6pt" sourceRef="Gateway_0bkmdu1" targetRef="ChoreographyTask_0wgwx5w" />
+    
+    <!-- RE:changes -->
+<bpmn2:sequenceFlow id="Flow_1dtk6pt" sourceRef="Gateway_0bkmdu1" targetRef="ChoreographyTask_0wgwx5w"/>
+  <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="JavaScript">
+    <![CDATA[ (cond & 1) == 1 ]]>
+  </bpmn2:conditionExpression>
+</bpmn2:sequenceFlow>
+    <!-- RE:changes -->
+
     <bpmn2:endEvent id="Event_1dqwt7o">
       <bpmn2:incoming>Flow_0xf3bjr</bpmn2:incoming>
       <bpmn2:incoming>Flow_0rbsav6</bpmn2:incoming>

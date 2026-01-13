@@ -33,7 +33,7 @@ contract SettlementEscrow {
         address token, 
         address payer, 
         address payee, 
-        uint256 amount,
+        uint256 amount
     ) external {
         Deal storage d = deals[key];
 
@@ -44,7 +44,6 @@ contract SettlementEscrow {
             d.payer = payer;
             d.payee = payee;
             d.amount = amount;
-            d.state = State.NONE;
         } else {
             // prevent re-using the same key with different parameters
             require(d.process == msg.sender, "key already bound");
@@ -59,7 +58,7 @@ contract SettlementEscrow {
 
     function release(bytes32 key) external onlyProcess(key) {
         Deal storage d = deals[key];
-        require(d.state == State.LOCKED "invalid state");
+        require(s.state == State.LOCKED "invalid state");
         require(IERC20(d.token).transfer(d.payee, d.amount), "transfer failed");
         d.state = State.RELEASED;
         }
